@@ -3,433 +3,337 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>QUANTUM SINGULARITY</title>
-    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#010409">
+    <title>Q-Hub Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500&display=swap" rel="stylesheet">
-
     <style>
+        /* --- GITHUB DARK THEME --- */
         :root {
-            --neon-cyan: #00f3ff;
-            --neon-magenta: #ff0055;
-            --void-dark: #030304;
-            --glass: rgba(10, 15, 20, 0.4);
-            --glass-border: rgba(255, 255, 255, 0.08);
+            --bg-canvas: #010409; --bg-sec: #161b22; --border: #30363d;
+            --text: #c9d1d9; --muted: #8b949e; --blue: #58a6ff; --green: #238636;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
+        body { background: var(--bg-canvas); color: var(--text); margin: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        body {
-            background-color: var(--void-dark);
-            color: white;
-            font-family: 'Rajdhani', sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-        }
+        /* LAYOUT */
+        header { height: 60px; background: var(--bg-sec); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font-weight: bold; }
+        main { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 100px; }
+        nav { height: 80px; background: var(--bg-sec); border-top: 1px solid var(--border); position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding-bottom: 15px; }
+        .nav-item { color: var(--muted); font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+        .nav-item.active { color: var(--blue); }
+        .nav-item i { font-size: 20px; }
 
-        /* --- LAYERS --- */
-        #webgl-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
-        }
-
-        #ui-layer {
-            position: relative; z-index: 10;
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
-            pointer-events: none; /* Laisse passer les clics vers le 3D si besoin */
-        }
-
-        /* --- UI COMPONENTS --- */
-        .interactive { pointer-events: all; } /* Réactive les clics pour les boutons */
-
-        .hud-header {
-            padding: 25px;
-            display: flex; justify-content: space-between; align-items: flex-start;
-        }
-
-        .title-block h1 {
-            font-family: 'Orbitron'; font-size: 24px; letter-spacing: 2px;
-            background: linear-gradient(90deg, #fff, var(--neon-cyan));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(0, 243, 255, 0.4);
-        }
-
-        .system-metrics {
-            text-align: right; font-family: 'Orbitron'; font-size: 10px; color: var(--neon-cyan);
-            line-height: 1.5; opacity: 0.8;
-        }
-
-        /* CIRCUIT HOLOGRAPHIC CARD */
-        .circuit-panel {
-            margin: auto 20px 20px 20px;
-            background: rgba(5, 5, 8, 0.65);
-            backdrop-filter: blur(20px) saturate(150%);
-            -webkit-backdrop-filter: blur(20px) saturate(150%);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 20px rgba(0, 243, 255, 0.05);
-            transform: translateY(100px); opacity: 0; /* Pour animation d'entrée */
-        }
-
-        .circuit-grid {
-            display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px;
-        }
-
-        .qubit-row {
-            display: flex; align-items: center; height: 45px;
-            position: relative;
-        }
-
-        .qubit-row::before {
-            content:''; position: absolute; left: 30px; right: 0; top: 50%; height: 1px;
-            background: rgba(255,255,255,0.15); z-index: 0;
-        }
-
-        .qubit-label {
-            font-family: 'Orbitron'; font-size: 12px; color: rgba(255,255,255,0.6); width: 35px; z-index: 1;
-        }
-
-        .gate-slot {
-            width: 38px; height: 38px; margin-left: 8px; z-index: 2;
-            background: #0b0b10; border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan); border-radius: 8px;
-            display: flex; justify-content: center; align-items: center;
-            font-weight: 700; font-size: 14px;
-            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
-            animation: gatePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes gatePop { from { transform: scale(0) rotate(-45deg); } to { transform: scale(1) rotate(0); } }
-
-        /* CONTROL DECK */
-        .control-deck {
-            display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
-        }
-
-        .btn-gate {
-            aspect-ratio: 1; border-radius: 12px; border: none;
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1);
-            color: white; font-family: 'Rajdhani'; font-weight: 700; font-size: 16px;
-            transition: all 0.2s; cursor: pointer;
-        }
-        .btn-gate:active { background: var(--neon-cyan); color: black; transform: scale(0.9); }
-
-        .btn-launch {
-            grid-column: span 5; height: 50px; border-radius: 15px; margin-top: 10px;
-            background: linear-gradient(90deg, var(--neon-cyan), #0088ff);
-            border: none; color: black; font-family: 'Orbitron'; font-weight: 900; letter-spacing: 2px;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.3);
-            position: relative; overflow: hidden;
-        }
+        /* UI ELEMENTS */
+        .card { background: var(--bg-sec); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+        .btn { background: var(--bg-sec); border: 1px solid var(--border); color: var(--blue); padding: 8px 16px; border-radius: 6px; font-weight: bold; width: 100%; margin-top: 10px; }
+        .btn-primary { background: var(--green); color: white; border: none; }
+        input, textarea { width: 100%; background: #0d1117; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 6px; margin-bottom: 10px; font-family: monospace; }
         
-        /* OVERLAY LOADING */
-        .processing-overlay {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .loader-text { font-family: 'Orbitron'; margin-top: 20px; color: var(--neon-cyan); letter-spacing: 1px; }
+        /* EDITOR */
+        .mode-switch { display: flex; background: var(--bg-canvas); border-radius: 6px; padding: 2px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .mode-btn { flex: 1; text-align: center; padding: 6px; font-size: 12px; border-radius: 4px; color: var(--muted); }
+        .mode-btn.active { background: var(--border); color: white; font-weight: bold; }
 
-        /* START BUTTON (AUDIO CONTEXT) */
-        #start-btn {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            padding: 20px 40px; border: 1px solid var(--neon-cyan); background: black; color: white;
-            font-family: 'Orbitron'; cursor: pointer; z-index: 999;
-        }
+        .qubit-track { display: flex; align-items: center; height: 50px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+        .qubit-label { min-width: 40px; font-family: monospace; color: var(--muted); }
+        .gate-slot { min-width: 40px; height: 40px; margin-left: 8px; border: 1px dashed var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; background: #0d1117; }
+        .gate-slot.filled { background: var(--blue); color: white; border: none; }
 
+        /* CODE EDITOR */
+        .code-area { height: 300px; font-size: 12px; line-height: 1.5; resize: none; white-space: pre; overflow-x: auto; }
+
+        /* PROJECTS LIST */
+        .project-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+        .project-item:hover { opacity: 0.8; }
+        .badge { background: var(--border); padding: 2px 8px; border-radius: 10px; font-size: 10px; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 99; display: flex; align-items: flex-end; }
+        .bottom-sheet { width: 100%; background: var(--bg-sec); padding: 20px; border-radius: 16px 16px 0 0; animation: slideUp 0.3s; }
+        .gates-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .gate-btn { aspect-ratio: 1; background: var(--bg-canvas); border: 1px solid var(--border); border-radius: 8px; color: white; font-weight: bold; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div id="webgl-canvas"></div>
+<div id="app">
+    <header>
+        <div style="display:flex; align-items:center; gap:10px;">
+            <i class="fa-brands fa-github fa-lg"></i>
+            <span>{{ pageTitle }}</span>
+        </div>
+        <div v-if="processing" style="font-size:12px; color:var(--green)">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </div>
+    </header>
 
-    <div id="app">
-        
-        <button id="start-btn" v-if="!audioInitialized" @click="initSystem">INITIALIZE SYSTEM</button>
-
-        <div id="ui-layer" v-else>
-            <div class="hud-header">
-                <div class="title-block">
-                    <h1>SINGULARITY</h1>
-                    <div style="font-size:10px; letter-spacing:3px; opacity:0.5; margin-top:5px">IBM QUANTUM CLIENT</div>
+    <main>
+        <div v-if="currentTab === 'projects'">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                    <span>Mes Projets</span>
+                    <button class="btn" style="width:auto; margin:0; padding:4px 10px" @click="createNewProject">+ Nouveau</button>
                 </div>
-                <div class="system-metrics">
-                    COHERENCE: 99.9%<br>
-                    TEMP: 15mK<br>
-                    BACKEND: OSPREY
+                <div v-if="projects.length === 0" style="text-align:center; padding:20px; color:var(--muted)">
+                    Aucun projet. Créez-en un !
+                </div>
+                <div v-for="(proj, index) in projects" :key="proj.id" class="project-item" @click="openProject(index)">
+                    <div>
+                        <div style="font-weight:600">{{ proj.name }}</div>
+                        <div style="font-size:11px; color:var(--muted)">Modifié: {{ proj.lastModified }}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px">
+                        <span class="badge">{{ proj.mode }}</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size:12px; color:var(--muted)"></i>
+                    </div>
                 </div>
             </div>
+            
+            <div class="card" style="border-color:var(--green)">
+                <div style="font-weight:bold; margin-bottom:5px; color:var(--green)">Sauvegarde Auto Active</div>
+                <div style="font-size:12px; color:var(--muted)">Toutes vos modifications sont enregistrées localement sur cet appareil.</div>
+            </div>
+        </div>
 
-            <div class="circuit-panel interactive" ref="panel">
-                <div class="circuit-grid">
-                    <div class="qubit-row" v-for="(qubit, i) in qubits" :key="i">
-                        <div class="qubit-label">q[{{i}}]</div>
-                        <div class="gate-slot" v-for="gate in qubit.gates">{{ gate }}</div>
+        <div v-if="currentTab === 'composer'">
+            <div v-if="!activeProject" style="text-align:center; padding-top:50px;">
+                <p>Aucun projet ouvert.</p>
+                <button class="btn btn-primary" @click="currentTab='projects'">Aller aux projets</button>
+            </div>
+
+            <div v-else>
+                <div class="mode-switch">
+                    <div class="mode-btn" :class="{active: activeProject.mode === 'visual'}" @click="activeProject.mode = 'visual'">Visual Blocks</div>
+                    <div class="mode-btn" :class="{active: activeProject.mode === 'code'}" @click="activeProject.mode = 'code'">Python Code</div>
+                </div>
+
+                <div v-if="activeProject.mode === 'visual'" class="card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <input v-model="activeProject.name" style="width:60%; margin:0; background:transparent; border:none; padding:0; font-weight:bold; font-size:16px;">
+                        <button style="background:none; border:1px solid var(--border); color:var(--text); border-radius:4px; font-size:10px; padding:2px 8px;" @click="addQubit">+ Qubit</button>
+                    </div>
+
+                    <div style="overflow-x:auto;">
+                        <div v-for="(qubitLine, qIndex) in activeProject.circuit" :key="qIndex" class="qubit-track">
+                            <div class="qubit-label">q[{{qIndex}}]</div>
+                            <div v-for="(gate, sIndex) in qubitLine" :key="sIndex" 
+                                 class="gate-slot" :class="{filled: gate}"
+                                 @click="openGateSelector(qIndex, sIndex)">
+                                {{ gate || '+' }}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="control-deck">
-                    <button class="btn-gate" @click="addGate('H')">H</button>
-                    <button class="btn-gate" @click="addGate('X')">X</button>
-                    <button class="btn-gate" @click="addGate('Y')">Y</button>
-                    <button class="btn-gate" @click="addGate('Z')">Z</button>
-                    <button class="btn-gate" style="color:var(--neon-magenta); border-color:var(--neon-magenta)" @click="reset">✕</button>
-                    
-                    <button class="btn-launch" @click="executeQuantumJob">
-                        {{ processing ? 'COMPUTING...' : 'EXECUTE' }}
+                <div v-if="activeProject.mode === 'code'" class="card">
+                    <div style="margin-bottom:10px; font-weight:bold">{{ activeProject.name }}.py</div>
+                    <textarea v-model="activeProject.codeContent" class="code-area" placeholder="Collez votre code Qiskit ici..."></textarea>
+                </div>
+
+                <div class="card">
+                    <div style="margin-bottom:10px; font-size:12px; color:var(--muted)">Backend: {{ settings.backend || 'ibm_osaka' }}</div>
+                    <button class="btn btn-primary" @click="executeViaN8N" :disabled="processing">
+                        {{ processing ? 'Envoi à IBM...' : 'Lancer sur IBM Quantum' }}
                     </button>
+                    <div v-if="lastResult" style="margin-top:15px; padding:10px; background:black; border-radius:4px; font-family:monospace; font-size:11px;">
+                        > Result: {{ lastResult }}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <transition @enter="enterOverlay" @leave="leaveOverlay">
-            <div class="processing-overlay" v-if="processing">
-                <div style="width:50px; height:50px; border:3px solid var(--neon-cyan); border-top:3px solid transparent; border-radius:50%; animation: spin 1s infinite linear;"></div>
-                <div class="loader-text">{{ statusText }}</div>
+        <div v-if="currentTab === 'settings'">
+            <div class="card">
+                <div style="font-weight:bold; margin-bottom:15px">Connexion N8N & IBM</div>
+                
+                <label style="font-size:12px; color:var(--muted)">URL Webhook N8N</label>
+                <input v-model="settings.n8nUrl" placeholder="https://votre-n8n.com/webhook/..." type="url">
+                
+                <label style="font-size:12px; color:var(--muted)">IBM Quantum Token (Optionnel si géré dans n8n)</label>
+                <input v-model="settings.ibmToken" type="password" placeholder="api_token...">
+
+                <label style="font-size:12px; color:var(--muted)">Backend IBM par défaut</label>
+                <input v-model="settings.backend" placeholder="ibm_osaka">
+                
+                <button class="btn" @click="saveSettings">Sauvegarder la config</button>
             </div>
-        </transition>
-
-    </div>
-
-    <script type="x-shader/x-vertex" id="vertexShader">
-        varying vec2 vUv;
-        varying float vDisplacement;
-        uniform float uTime;
-        
-        // Simplex Noise Function (Simplified)
-        vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-        vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-        vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-        vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
-        float snoise(vec3 v) {
-            const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
-            const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
-            vec3 i  = floor(v + dot(v, C.yyy) );
-            vec3 x0 = v - i + dot(i, C.xxx) ;
-            vec3 g = step(x0.yzx, x0.xyz);
-            vec3 l = 1.0 - g;
-            vec3 i1 = min( g.xyz, l.zxy );
-            vec3 i2 = max( g.xyz, l.zxy );
-            vec3 x1 = x0 - i1 + C.xxx;
-            vec3 x2 = x0 - i2 + C.yyy;
-            vec3 x3 = x0 - D.yyy;
-            i = mod289(i); 
-            vec4 p = permute( permute( permute( 
-                     i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
-                   + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
-                   + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
-            float n_ = 0.142857142857;
-            vec3  ns = n_ * D.wyz - D.xzx;
-            vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-            vec4 x_ = floor(j * ns.z);
-            vec4 y_ = floor(j - 7.0 * x_ );
-            vec4 x = x_ *ns.x + ns.yyyy;
-            vec4 y = y_ *ns.x + ns.yyyy;
-            vec4 h = 1.0 - abs(x) - abs(y);
-            vec4 b0 = vec4( x.xy, y.xy );
-            vec4 b1 = vec4( x.zw, y.zw );
-            vec4 s0 = floor(b0)*2.0 + 1.0;
-            vec4 s1 = floor(b1)*2.0 + 1.0;
-            vec4 sh = -step(h, vec4(0.0));
-            vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
-            vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
-            vec3 p0 = vec3(a0.xy,h.x);
-            vec3 p1 = vec3(a0.zw,h.y);
-            vec3 p2 = vec3(a1.xy,h.z);
-            vec3 p3 = vec3(a1.zw,h.w);
-            vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
-            p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-            vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-            m = m * m;
-            return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
-        }
-
-        void main() {
-            vUv = uv;
-            vDisplacement = snoise(position + vec3(uTime * 0.5));
-            vec3 newPosition = position + normal * (vDisplacement * 0.4);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-        }
-    </script>
-
-    <script type="x-shader/x-fragment" id="fragmentShader">
-        uniform float uTime;
-        uniform vec3 uColor;
-        varying float vDisplacement;
-
-        void main() {
-            // Effet "Coeur Liquide"
-            float intensity = 0.5 + vDisplacement * 2.0;
-            vec3 glow = uColor * intensity;
-            // Scanline effect
-            float scanline = sin(gl_FragCoord.y * 0.1 + uTime * 5.0) * 0.1;
             
-            gl_FragColor = vec4(glow + scanline, 1.0);
-        }
-    </script>
+            <div class="card">
+                <div class="project-item" style="color:var(--text); border:none" @click="wipeData">
+                    <span>Réinitialiser l'application</span>
+                    <i class="fa-solid fa-trash" style="color:#f85149"></i>
+                </div>
+            </div>
+        </div>
+    </main>
 
-    <script>
-        const { createApp, ref, onMounted } = Vue;
+    <nav>
+        <div class="nav-item" :class="{active: currentTab==='projects'}" @click="currentTab='projects'">
+            <i class="fa-solid fa-folder"></i><span>Projets</span>
+        </div>
+        <div class="nav-item" :class="{active: currentTab==='composer'}" @click="currentTab='composer'">
+            <i class="fa-solid fa-microchip"></i><span>Editeur</span>
+        </div>
+        <div class="nav-item" :class="{active: currentTab==='settings'}" @click="currentTab='settings'">
+            <i class="fa-solid fa-gear"></i><span>Config</span>
+        </div>
+    </nav>
 
-        createApp({
-            setup() {
-                const audioInitialized = ref(false);
-                const qubits = ref([{gates:[]}, {gates:[]}]);
-                const processing = ref(false);
-                const statusText = ref("");
-                const panel = ref(null);
+    <div v-if="showGateModal" class="modal-overlay" @click.self="showGateModal=false">
+        <div class="bottom-sheet">
+            <div style="font-weight:bold; margin-bottom:10px">Ajouter Porte</div>
+            <div class="gates-grid">
+                <button class="gate-btn" style="color:#a371f7" @click="setGate('H')">H</button>
+                <button class="gate-btn" style="color:#58a6ff" @click="setGate('X')">X</button>
+                <button class="gate-btn" style="color:#58a6ff" @click="setGate('Z')">Z</button>
+                <button class="gate-btn" style="color:#3fb950" @click="setGate('CX')">CX</button>
+                <button class="gate-btn" style="color:#d29922" @click="setGate('M')">M</button>
+                <button class="gate-btn" style="border-color:#f85149; color:#f85149" @click="setGate(null)">Del</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-                // --- AUDIO ENGINE ---
-                let audioCtx, oscillator, gainNode;
-                
-                const initAudio = () => {
-                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    // Drone d'ambiance
-                    const droneOsc = audioCtx.createOscillator();
-                    const droneGain = audioCtx.createGain();
-                    droneOsc.type = 'sine';
-                    droneOsc.frequency.value = 55; // Note basse
-                    droneGain.gain.value = 0.05;
-                    droneOsc.connect(droneGain);
-                    droneGain.connect(audioCtx.destination);
-                    droneOsc.start();
+<script>
+    const { createApp, ref, watch, onMounted, computed } = Vue;
+
+    createApp({
+        setup() {
+            // STATE
+            const currentTab = ref('projects');
+            const projects = ref([]);
+            const activeProjectIndex = ref(null);
+            const showGateModal = ref(false);
+            const selection = ref({q:0, s:0});
+            const processing = ref(false);
+            const lastResult = ref(null);
+            
+            const settings = ref({
+                n8nUrl: '',
+                ibmToken: '',
+                backend: 'ibm_brussels'
+            });
+
+            // LOAD / SAVE SYSTEM (LOCAL STORAGE)
+            onMounted(() => {
+                const savedProjects = localStorage.getItem('qhub_projects');
+                const savedSettings = localStorage.getItem('qhub_settings');
+                if(savedProjects) projects.value = JSON.parse(savedProjects);
+                if(savedSettings) settings.value = JSON.parse(savedSettings);
+            });
+
+            watch([projects, settings], () => {
+                localStorage.setItem('qhub_projects', JSON.stringify(projects.value));
+                localStorage.setItem('qhub_settings', JSON.stringify(settings.value));
+            }, { deep: true });
+
+            // COMPUTED
+            const activeProject = computed(() => {
+                return activeProjectIndex.value !== null ? projects.value[activeProjectIndex.value] : null;
+            });
+
+            const pageTitle = computed(() => {
+                if(currentTab.value === 'projects') return 'Mes Projets';
+                if(currentTab.value === 'composer') return activeProject.value ? activeProject.value.name : 'Editeur';
+                return 'Paramètres';
+            });
+
+            // METHODS
+            const createNewProject = () => {
+                projects.value.unshift({
+                    id: Date.now(),
+                    name: 'Nouveau Circuit',
+                    mode: 'visual',
+                    lastModified: new Date().toLocaleTimeString(),
+                    circuit: [[null, null, null, null], [null, null, null, null]], // 2 qubits par défaut
+                    codeContent: "from qiskit import QuantumCircuit\n\nqc = QuantumCircuit(2)\nqc.h(0)\nqc.cx(0, 1)\nqc.measure_all()"
+                });
+                openProject(0);
+            };
+
+            const openProject = (index) => {
+                activeProjectIndex.value = index;
+                currentTab.value = 'composer';
+            };
+
+            const addQubit = () => {
+                if(activeProject.value) {
+                    // Ajoute une ligne vide de la même longueur que la première ligne
+                    const length = activeProject.value.circuit[0].length;
+                    activeProject.value.circuit.push(new Array(length).fill(null));
+                }
+            };
+
+            const openGateSelector = (q, s) => {
+                selection.value = {q, s};
+                showGateModal.value = true;
+            };
+
+            const setGate = (gate) => {
+                if(activeProject.value) {
+                    activeProject.value.circuit[selection.value.q][selection.value.s] = gate;
+                    activeProject.value.lastModified = new Date().toLocaleTimeString();
+                }
+                showGateModal.value = false;
+            };
+
+            // --- LIAISON N8N ---
+            const executeViaN8N = async () => {
+                if(!settings.value.n8nUrl) {
+                    alert("Configurez l'URL N8N dans l'onglet Config !");
+                    currentTab.value = 'settings';
+                    return;
+                }
+
+                processing.value = true;
+                lastResult.value = null;
+
+                // Préparation des données à envoyer
+                const payload = {
+                    token: settings.value.ibmToken,
+                    backend: settings.value.backend,
+                    mode: activeProject.value.mode,
+                    // Si mode visual, on envoie la grille, si code, on envoie le texte
+                    data: activeProject.value.mode === 'code' ? activeProject.value.codeContent : activeProject.value.circuit
                 };
 
-                const playSound = (freq, type = 'sine', decay = 0.1) => {
-                    if(!audioCtx) return;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + decay);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + decay);
-                };
-
-                // --- THREE JS ENGINE ---
-                let scene, camera, renderer, blob, uniforms;
-                
-                const init3D = () => {
-                    scene = new THREE.Scene();
-                    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-                    camera.position.z = 2.5;
-
-                    renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-                    renderer.setSize(window.innerWidth, window.innerHeight);
-                    renderer.setPixelRatio(window.devicePixelRatio); // Netteté max sur iPhone
-                    document.getElementById('webgl-canvas').appendChild(renderer.domElement);
-
-                    // LE COEUR QUANTIQUE (SHADER MATERIAL)
-                    uniforms = {
-                        uTime: { value: 0.0 },
-                        uColor: { value: new THREE.Color(0x00f3ff) }
-                    };
-
-                    const geometry = new THREE.IcosahedronGeometry(1, 60); // Haute résolution
-                    const material = new THREE.ShaderMaterial({
-                        vertexShader: document.getElementById('vertexShader').textContent,
-                        fragmentShader: document.getElementById('fragmentShader').textContent,
-                        uniforms: uniforms,
-                        wireframe: false,
-                        transparent: true,
-                        opacity: 0.9
+                try {
+                    // C'est ici que l'app appelle N8N
+                    const response = await fetch(settings.value.n8nUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
                     });
-
-                    blob = new THREE.Mesh(geometry, material);
-                    scene.add(blob);
-
-                    // PARTICULES D'ARRIÈRE-PLAN
-                    const starGeo = new THREE.BufferGeometry();
-                    const starCount = 2000;
-                    const pos = new Float32Array(starCount * 3);
-                    for(let i=0; i<starCount*3; i++) pos[i] = (Math.random() - 0.5) * 10;
-                    starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-                    const starMat = new THREE.PointsMaterial({color: 0xffffff, size: 0.02, transparent: true, opacity: 0.5});
-                    const stars = new THREE.Points(starGeo, starMat);
-                    scene.add(stars);
-
-                    // ANIMATION LOOP
-                    const animate = () => {
-                        requestAnimationFrame(animate);
-                        uniforms.uTime.value += 0.01;
-                        blob.rotation.y += 0.002;
-                        stars.rotation.y -= 0.0005;
-                        renderer.render(scene, camera);
-                    };
-                    animate();
-                };
-
-                // --- UI LOGIC ---
-
-                const initSystem = () => {
-                    initAudio();
-                    init3D();
-                    audioInitialized.value = true;
-                    // Animation d'entrée du panneau
-                    setTimeout(() => {
-                        gsap.to(".circuit-panel", {y: 0, opacity: 1, duration: 1, ease: "power4.out"});
-                        playSound(400, 'triangle', 0.5);
-                    }, 500);
-                };
-
-                const addGate = (gate) => {
-                    playSound(800 + Math.random()*200, 'sine');
-                    qubits.value[0].gates.push(gate);
-                    qubits.value[1].gates.push("-");
                     
-                    // Réaction du Blob 3D
-                    gsap.to(blob.scale, {x:1.2, y:1.2, z:1.2, duration:0.1, yoyo:true, repeat:1});
-                    uniforms.uColor.value.setHex(0xff00ff); // Flash Magenta
-                    setTimeout(() => uniforms.uColor.value.setHex(0x00f3ff), 200);
+                    const result = await response.json();
+                    lastResult.value = JSON.stringify(result);
                     
-                    if(navigator.vibrate) navigator.vibrate(10);
-                };
+                } catch (e) {
+                    lastResult.value = "Erreur de connexion N8N: " + e.message;
+                } finally {
+                    processing.value = false;
+                }
+            };
 
-                const reset = () => {
-                    playSound(200, 'sawtooth', 0.3);
-                    qubits.value = [{gates:[]}, {gates:[]}];
-                };
+            const saveSettings = () => alert("Configuration sauvegardée !");
+            const wipeData = () => {
+                if(confirm("Tout effacer ?")) {
+                    localStorage.clear();
+                    location.reload();
+                }
+            };
 
-                const executeQuantumJob = () => {
-                    playSound(100, 'square', 1.0);
-                    processing.value = true;
-                    statusText.value = "CONNECTING TO OSPREY...";
-                    
-                    // Effet visuel intense
-                    gsap.to(camera.position, {z: 1.5, duration: 2, ease: "power2.in"});
-                    gsap.to(blob.rotation, {y: blob.rotation.y + 10, duration: 3});
-
-                    // Simulation des étapes
-                    setTimeout(() => statusText.value = "TRANSPILING QISKIT...", 1500);
-                    setTimeout(() => statusText.value = "RUNNING SHOTS (4096)...", 3000);
-                    setTimeout(() => {
-                        processing.value = false;
-                        gsap.to(camera.position, {z: 2.5, duration: 1, ease: "elastic.out"});
-                        alert("RÉSULTAT: |00⟩ (Prob: 0.98)");
-                    }, 4500);
-                };
-
-                return { 
-                    audioInitialized, initSystem, qubits, processing, statusText, 
-                    addGate, reset, executeQuantumJob 
-                };
-            }
-        }).mount('#app');
-    </script>
-
-    <style>
-        /* Animation du loader */
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    </style>
+            return {
+                currentTab, pageTitle, projects, activeProject, 
+                showGateModal, processing, lastResult, settings,
+                createNewProject, openProject, addQubit, openGateSelector, setGate, 
+                executeViaN8N, saveSettings, wipeData
+            };
+        }
+    }).mount('#app');
+</script>
 </body>
 </html>
