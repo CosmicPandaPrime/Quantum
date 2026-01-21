@@ -4,445 +4,421 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
-    <title>QuantumOS Liquid</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default"> <meta name="theme-color" content="#f0f2f5">
+    <title>Q-Cloud 3D</title>
 
+    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
-        /* --- DESIGN SYSTEM LIQUID --- */
+        /* --- CLAYMORPHISM SYSTEM --- */
         :root {
-            --neon-cyan: #00f2ff;
-            --neon-pink: #ff0055;
-            --neon-violet: #bc13fe;
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-highlight: rgba(255, 255, 255, 0.15);
-            --blur-strength: 30px;
+            --bg: #f0f4f8; /* Blanc cassé très doux */
+            --surface: #ffffff;
+            --primary: #6c5ce7;
+            --primary-soft: #a29bfe;
+            --accent: #00cec9;
+            --text: #2d3436;
+            --text-light: #b2bec3;
+            
+            /* L'effet "Fluffy 3D" magique */
+            --shadow-flat: 
+                8px 8px 16px rgba(166, 171, 189, 0.3), 
+                -8px -8px 16px rgba(255, 255, 255, 0.8);
+            
+            --shadow-pressed: 
+                inset 6px 6px 10px rgba(166, 171, 189, 0.2), 
+                inset -6px -6px 10px rgba(255, 255, 255, 0.8);
+            
+            --shadow-float: 
+                0 20px 50px rgba(108, 92, 231, 0.15), 
+                0 10px 20px rgba(108, 92, 231, 0.1);
+            
+            --radius: 24px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'Outfit', sans-serif; }
-        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'Varela Round', sans-serif; }
+
         body {
-            margin: 0; background: #000; color: white; height: 100vh; overflow: hidden;
+            margin: 0; background-color: var(--bg); color: var(--text);
+            height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
         }
 
-        /* --- FOND ANIMÉ (BLOBS) --- */
-        .liquid-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-            background: #050505; overflow: hidden;
-        }
-        .blob {
-            position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.6;
-            animation: float 20s infinite ease-in-out;
-        }
-        .blob-1 { width: 400px; height: 400px; background: var(--neon-violet); top: -10%; left: -10%; }
-        .blob-2 { width: 300px; height: 300px; background: var(--neon-cyan); bottom: -10%; right: -10%; animation-delay: -5s; }
-        .blob-3 { width: 250px; height: 250px; background: var(--neon-pink); top: 40%; left: 40%; animation-delay: -10s; }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-        }
-
-        /* --- GLASSMORPHISM UI --- */
-        .glass-panel {
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--blur-strength)); -webkit-backdrop-filter: blur(var(--blur-strength));
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-        }
-
-        /* --- HEADER --- */
+        /* --- HEADER FLUFFY --- */
         header {
-            height: 80px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between;
-            z-index: 50;
+            padding: 20px 30px; display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
         }
-        .brand { font-weight: 900; font-size: 24px; letter-spacing: -1px; background: linear-gradient(to right, #fff, var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .logo-icon { width: 30px; height: 30px; border: 2px solid var(--neon-cyan); border-radius: 50%; position: relative; margin-right: 10px; display: inline-block; }
-        .logo-icon::after { content:''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 10px; height: 10px; background: var(--neon-pink); border-radius: 50%; }
-
-        /* --- NAVIGATION INFERIEURE FLOTTANTE --- */
-        .dock {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            width: 90%; height: 70px;
-            background: rgba(10, 10, 10, 0.6);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 35px;
-            display: flex; justify-content: space-around; align-items: center;
-            padding: 0 10px; z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .logo-area {
+            display: flex; align-items: center; gap: 15px;
         }
-        .dock-item {
-            width: 50px; height: 50px; border-radius: 50%;
+        .logo-box {
+            width: 45px; height: 45px; background: var(--surface);
+            border-radius: 16px; box-shadow: var(--shadow-flat);
             display: flex; align-items: center; justify-content: center;
-            font-size: 20px; color: rgba(255,255,255,0.5);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-size: 22px; color: var(--primary);
         }
-        .dock-item.active {
-            background: rgba(255,255,255,0.1); color: white;
-            transform: translateY(-15px) scale(1.1);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            border: 1px solid var(--neon-cyan);
+        h1 { font-size: 22px; margin: 0; color: var(--text); }
+
+        /* --- CONTAINER --- */
+        .main-stage {
+            flex: 1; overflow-y: auto; padding: 10px 25px 120px 25px;
+            scroll-behavior: smooth;
         }
 
-        /* --- VIEWS --- */
-        .view-container { flex: 1; overflow-y: auto; padding: 0 20px 120px 20px; }
-        
-        /* --- DRAG & DROP ZONE (COMPOSER) --- */
-        .composer-layout { display: flex; flex-direction: column; gap: 20px; height: 100%; }
-        
-        .toolbox {
-            padding: 15px; overflow-x: auto; white-space: nowrap;
-            display: flex; gap: 10px; height: 80px; align-items: center;
+        /* --- CARDS (CLAY STYLE) --- */
+        .clay-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-flat);
+            padding: 25px; margin-bottom: 25px;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        
-        .gate-draggable {
-            width: 50px; height: 50px; border-radius: 12px;
-            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 16px; cursor: grab;
-            flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            position: relative; overflow: hidden;
-        }
-        /* Effet de brillance */
-        .gate-draggable::before {
-            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg); animation: shine 3s infinite;
-        }
+        .clay-card:active { transform: scale(0.98); }
 
-        /* Les lignes de circuit */
-        .circuit-board {
-            display: flex; flex-direction: column; gap: 15px;
-            padding: 20px 0;
+        /* --- GATE ELEMENTS (DRAGGABLE) --- */
+        .toolbox-row {
+            display: flex; gap: 15px; padding: 10px 5px 25px 5px;
+            overflow-x: auto; scrollbar-width: none;
         }
         
-        .qubit-track {
-            display: flex; align-items: center; height: 60px;
-            background: rgba(0,0,0,0.2); border-radius: 12px;
-            padding: 5px; position: relative;
-        }
-        .qubit-track::before {
-            content:''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px;
-            background: rgba(255,255,255,0.1); z-index: 0; pointer-events: none;
-        }
-        
-        .qubit-info {
-            width: 40px; height: 40px; border-radius: 8px; background: #111;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: bold; color: var(--neon-cyan);
-            margin-right: 10px; z-index: 2;
-        }
-
-        .drop-zone {
-            flex: 1; height: 100%; display: flex; align-items: center; gap: 5px;
-            overflow-x: auto; padding-right: 20px; z-index: 1;
-        }
-        
-        /* Style de l'item une fois déposé */
-        .drop-zone .gate-draggable {
-            background: var(--neon-violet); color: white; border: none;
-            box-shadow: 0 0 15px var(--neon-violet);
-        }
-
-        /* --- SETTINGS GRID (HUGE MENU) --- */
-        .grid-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .setting-card {
-            padding: 20px; display: flex; flex-direction: column; gap: 10px;
-            transition: transform 0.2s;
-        }
-        .setting-card:active { transform: scale(0.98); background: rgba(255,255,255,0.08); }
-        .setting-icon { font-size: 24px; color: var(--neon-cyan); }
-        .setting-label { font-size: 14px; font-weight: 500; opacity: 0.8; }
-        .setting-value { font-size: 11px; color: var(--neon-pink); font-weight: 700; text-transform: uppercase; }
-
-        /* --- INPUT STYLES --- */
-        .liquid-input {
-            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-            padding: 15px; border-radius: 12px; color: white; font-size: 16px; outline: none;
+        .gate-3d {
+            min-width: 60px; height: 60px;
+            background: var(--surface);
+            border-radius: 18px;
+            box-shadow: var(--shadow-flat);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 18px; color: var(--primary);
+            position: relative; cursor: grab;
             transition: all 0.3s;
         }
-        .liquid-input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+
+        /* Décoration interne pour effet volume */
+        .gate-3d::after {
+            content:''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(240,240,255,0) 100%);
+            pointer-events: none; opacity: 0.5;
+        }
+
+        /* L'état quand on soulève l'élément */
+        .sortable-drag {
+            cursor: grabbing; opacity: 1 !important; background: var(--primary) !important; color: white !important;
+            transform: scale(1.2) rotate(5deg) !important;
+            box-shadow: 0 30px 60px rgba(108, 92, 231, 0.4) !important;
+            z-index: 9999;
+        }
+
+        /* Animation Jelly à l'atterrissage */
+        @keyframes jelly {
+            0% { transform: scale(1, 1); }
+            30% { transform: scale(1.25, 0.75); }
+            40% { transform: scale(0.75, 1.25); }
+            50% { transform: scale(1.15, 0.85); }
+            65% { transform: scale(0.95, 1.05); }
+            75% { transform: scale(1.05, 0.95); }
+            100% { transform: scale(1, 1); }
+        }
+        .jelly-pop { animation: jelly 0.5s; }
+
+        /* --- CIRCUIT LINES --- */
+        .circuit-track {
+            display: flex; align-items: center; min-height: 80px;
+            background: #f8faff; border-radius: 20px;
+            box-shadow: inset 4px 4px 8px rgba(166, 171, 189, 0.1), inset -4px -4px 8px rgba(255,255,255,0.8);
+            margin-bottom: 15px; padding: 10px; position: relative;
+        }
+        .qubit-label {
+            font-weight: bold; color: var(--text-light); font-size: 14px;
+            width: 40px; text-align: center;
+        }
+        .drop-area {
+            flex: 1; display: flex; align-items: center; gap: 10px;
+            overflow-x: auto; min-height: 60px; padding-right: 20px;
+        }
+
+        /* --- BIG BUTTON --- */
+        .btn-fluffy {
+            width: 100%; padding: 20px; border: none; border-radius: 20px;
+            background: var(--primary); color: white;
+            font-size: 18px; font-weight: bold; letter-spacing: 1px;
+            box-shadow: 0 15px 30px rgba(108, 92, 231, 0.3);
+            transition: all 0.2s; position: relative; overflow: hidden;
+        }
+        .btn-fluffy:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(108, 92, 231, 0.2); }
+        .btn-fluffy::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+        }
+
+        /* --- FLOATING NAV --- */
+        .float-nav {
+            position: fixed; bottom: 40px; left: 20px; right: 20px;
+            height: 80px; background: var(--surface);
+            border-radius: 40px; box-shadow: var(--shadow-float);
+            display: flex; justify-content: space-around; align-items: center;
+            z-index: 100; padding: 0 10px;
+        }
+        .nav-btn {
+            width: 50px; height: 50px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-light); font-size: 20px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .nav-btn.active {
+            background: var(--bg); color: var(--primary);
+            box-shadow: var(--shadow-pressed);
+            transform: translateY(-10px);
+        }
+
+        /* --- INPUTS --- */
+        input {
+            width: 100%; border: none; padding: 15px; border-radius: 15px;
+            background: #f8faff; box-shadow: inset 4px 4px 8px rgba(166, 171, 189, 0.2), inset -4px -4px 8px rgba(255,255,255,0.8);
+            font-size: 16px; color: var(--primary); margin-bottom: 15px; outline: none;
+        }
+
+        /* --- TRANSITIONS --- */
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s, transform 0.3s; }
+        .fade-enter-from { opacity: 0; transform: translateY(20px); }
+        .fade-leave-to { opacity: 0; transform: translateY(-20px); }
 
     </style>
 </head>
 <body>
 
-    <div class="liquid-bg">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
-    </div>
+<div id="app">
 
-    <div id="app" style="height:100%; display:flex; flex-direction:column;">
-        
-        <header>
-            <div style="display:flex; align-items:center;">
-                <div class="logo-icon"></div>
-                <div class="brand">QUANTUM<span style="font-weight:300">OS</span></div>
+    <header>
+        <div class="logo-area">
+            <div class="logo-box">
+                <i class="fa-solid fa-cloud"></i>
             </div>
-            <div style="font-size:10px; background:rgba(255,255,255,0.1); padding:5px 10px; border-radius:20px;">
-                <i class="fa-solid fa-wifi" style="color:var(--neon-cyan)"></i> ONLINE
+            <div>
+                <h1>Q-Cloud</h1>
+                <div style="font-size:12px; color:var(--text-light)">Quantum Composer</div>
             </div>
-        </header>
+        </div>
+        <div class="logo-box" style="width:40px; height:40px; font-size:16px; color:var(--text-light)">
+            <i class="fa-solid fa-user"></i>
+        </div>
+    </header>
 
-        <div class="view-container">
+    <div class="main-stage">
+        <transition name="fade" mode="out-in">
             
-            <div v-show="view === 'lab'" class="composer-layout">
+            <div v-if="view === 'home'" key="home">
                 
-                <div class="glass-panel toolbox" id="toolbox">
-                    <div v-for="g in availableGates" :key="g" class="gate-draggable" :data-gate="g">
-                        {{ g }}
+                <div class="clay-card">
+                    <div style="font-size:12px; text-transform:uppercase; color:var(--text-light); font-weight:bold; margin-bottom:10px;">Portes Logiques</div>
+                    <div class="toolbox-row" id="toolbox">
+                        <div v-for="g in gates" :key="g" class="gate-3d" :data-id="g">
+                            {{ g }}
+                        </div>
                     </div>
                 </div>
 
-                <div class="glass-panel circuit-board">
-                    <div style="padding:0 20px; display:flex; justify-content:space-between; margin-bottom:10px; font-size:12px; color:rgba(255,255,255,0.5)">
-                        <span>REGISTER: QUREG_01</span>
-                        <span>{{ qubits.length }} QUBITS</span>
+                <div class="clay-card">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <span style="font-weight:bold; color:var(--text)">Circuit Principal</span>
+                        <span style="font-size:12px; color:var(--accent)">IBM_OSAKA • READY</span>
                     </div>
 
-                    <div v-for="(q, index) in qubits" :key="index" class="qubit-track">
-                        <div class="qubit-info">q{{index}}</div>
-                        <div class="drop-zone" :id="'qubit-' + index"></div>
+                    <div v-for="(line, idx) in qubits" :key="idx" class="circuit-track">
+                        <div class="qubit-label">q{{idx}}</div>
+                        <div class="drop-area" :id="'line-'+idx">
+                            </div>
                     </div>
 
-                    <div style="display:flex; justify-content:center; gap:15px; margin-top:10px;">
-                        <button @click="addQubit" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.1); border:none; color:white; font-size:20px;">+</button>
-                        <button @click="removeQubit" style="width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.1); border:none; color:var(--neon-pink); font-size:20px;">-</button>
+                    <div style="display:flex; gap:15px; margin-top:10px;">
+                        <button @click="addQubit" style="flex:1; padding:12px; border-radius:15px; border:none; background:var(--bg); color:var(--text-light); font-weight:bold; box-shadow:var(--shadow-flat);">+ Ligne</button>
+                        <button @click="resetCircuit" style="flex:1; padding:12px; border-radius:15px; border:none; background:var(--bg); color:var(--text-light); font-weight:bold; box-shadow:var(--shadow-flat); color:#ff7675">Reset</button>
                     </div>
                 </div>
 
-                <button @click="launchSequence" class="glass-panel" 
-                    style="width:100%; padding:20px; font-size:18px; font-weight:900; letter-spacing:2px; 
-                    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-violet)); border:none; color:black; 
-                    box-shadow: 0 0 30px rgba(0, 242, 255, 0.4); margin-top:auto;">
-                    <i class="fa-solid fa-rocket" style="margin-right:10px"></i> INITIALIZE
+                <button class="btn-fluffy" @click="runJob">
+                    <span v-if="!loading">LANCER LE CALCUL</span>
+                    <span v-else><i class="fa-solid fa-spinner fa-spin"></i> TRAITEMENT...</span>
                 </button>
 
             </div>
 
-            <div v-show="view === 'settings'">
-                <h2 style="margin-bottom:20px">Neural Configuration</h2>
-                
-                <div class="glass-panel" style="padding:20px; margin-bottom:20px;">
-                    <div style="font-size:12px; margin-bottom:10px; color:var(--neon-cyan)">UPLINK GATEWAY (N8N)</div>
-                    <input v-model="settings.n8nUrl" class="liquid-input" placeholder="https://webhook..." style="margin-bottom:15px">
-                    <div style="font-size:12px; margin-bottom:10px; color:var(--neon-cyan)">QUANTUM TOKEN</div>
-                    <input v-model="settings.token" type="password" class="liquid-input" placeholder="api_token_...">
+            <div v-if="view === 'settings'" key="settings">
+                <div class="clay-card">
+                    <h2 style="margin-bottom:20px; color:var(--primary)">Connexion API</h2>
+                    
+                    <label style="font-size:12px; font-weight:bold; color:var(--text-light); margin-left:10px;">N8N Webhook URL</label>
+                    <input v-model="settings.n8nUrl" placeholder="https://..." type="url">
+                    
+                    <label style="font-size:12px; font-weight:bold; color:var(--text-light); margin-left:10px;">IBM Quantum Token</label>
+                    <input v-model="settings.token" placeholder="api_token..." type="password">
+                    
+                    <button class="btn-fluffy" style="margin-top:10px" @click="saveSettings">SAUVEGARDER</button>
                 </div>
 
-                <div class="grid-settings">
-                    <div class="glass-panel setting-card">
-                        <i class="fa-solid fa-microchip setting-icon"></i>
-                        <span class="setting-label">Backend</span>
-                        <span class="setting-value">IBM_OSAKA</span>
+                <div class="clay-card">
+                    <h2 style="margin-bottom:20px; color:var(--primary)">Paramètres</h2>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; border-bottom:1px solid #eee;">
+                        <span>Haptique</span>
+                        <div style="width:40px; height:20px; background:var(--primary); border-radius:10px; position:relative;"><div style="width:16px; height:16px; background:white; border-radius:50%; position:absolute; right:2px; top:2px;"></div></div>
                     </div>
-                    <div class="glass-panel setting-card">
-                        <i class="fa-solid fa-bullseye setting-icon" style="color:var(--neon-pink)"></i>
-                        <span class="setting-label">Shots</span>
-                        <span class="setting-value">4096</span>
-                    </div>
-                    <div class="glass-panel setting-card">
-                        <i class="fa-solid fa-layer-group setting-icon"></i>
-                        <span class="setting-label">Opt. Level</span>
-                        <span class="setting-value">LEVEL 3</span>
-                    </div>
-                    <div class="glass-panel setting-card">
-                        <i class="fa-solid fa-wave-square setting-icon"></i>
-                        <span class="setting-label">Noise Model</span>
-                        <span class="setting-value">REALISTIC</span>
-                    </div>
-                    <div class="glass-panel setting-card">
-                        <i class="fa-solid fa-cloud-arrow-up setting-icon"></i>
-                        <span class="setting-label">Cloud Sync</span>
-                        <span class="setting-value">AUTO</span>
-                    </div>
-                    <div class="glass-panel setting-card">
-                        <i class="fa-solid fa-fingerprint setting-icon"></i>
-                        <span class="setting-label">Biometrics</span>
-                        <span class="setting-value">ENABLED</span>
-                    </div>
-                    <div class="glass-panel setting-card">
-                        <i class="fa-solid fa-terminal setting-icon"></i>
-                        <span class="setting-label">Debug Log</span>
-                        <span class="setting-value">VERBOSE</span>
-                    </div>
-                    <div class="glass-panel setting-card" @click="resetApp" style="border-color:var(--neon-pink)">
-                        <i class="fa-solid fa-trash setting-icon" style="color:var(--neon-pink)"></i>
-                        <span class="setting-label" style="color:var(--neon-pink)">Core Dump</span>
-                        <span class="setting-value">RESET</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0;">
+                        <span>Mode Sombre</span>
+                        <div style="width:40px; height:20px; background:#dfe6e9; border-radius:10px; position:relative;"><div style="width:16px; height:16px; background:white; border-radius:50%; position:absolute; left:2px; top:2px; box-shadow:0 2px 5px rgba(0,0,0,0.2);"></div></div>
                     </div>
                 </div>
             </div>
 
-            <div v-show="view === 'monitor'">
-                <div class="glass-panel" style="padding:20px; height:100%; font-family:monospace; font-size:12px; color:#0f0; overflow-y:auto;">
-                    <div v-for="(log, i) in logs" :key="i" style="margin-bottom:5px; border-bottom:1px solid rgba(0,255,0,0.1); padding-bottom:2px;">
-                        <span style="opacity:0.5">[{{ log.time }}]</span> {{ log.msg }}
+            <div v-if="view === 'results'" key="results">
+                <div class="clay-card">
+                    <h2 style="color:var(--primary)">Résultats</h2>
+                    <div v-if="logs.length === 0" style="text-align:center; padding:30px; color:var(--text-light)">
+                        Aucun résultat récent.
                     </div>
-                    <div v-if="loading" style="margin-top:10px; color:var(--neon-cyan)">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Processing Wavefunction...
+                    <div v-else>
+                        <div v-for="(l, i) in logs" :key="i" style="background:var(--bg); padding:15px; border-radius:15px; margin-bottom:10px; font-family:monospace; font-size:12px;">
+                            <div style="color:var(--accent); font-weight:bold; margin-bottom:5px;">{{ l.time }}</div>
+                            {{ l.msg }}
+                        </div>
                     </div>
                 </div>
             </div>
 
-        </div>
-
-        <div class="dock">
-            <div class="dock-item" :class="{active: view === 'lab'}" @click="view = 'lab'">
-                <i class="fa-solid fa-atom"></i>
-            </div>
-            <div class="dock-item" :class="{active: view === 'monitor'}" @click="view = 'monitor'">
-                <i class="fa-solid fa-heart-pulse"></i>
-            </div>
-            <div class="dock-item" :class="{active: view === 'settings'}" @click="view = 'settings'">
-                <i class="fa-solid fa-sliders"></i>
-            </div>
-        </div>
-
+        </transition>
     </div>
 
-    <script>
-        const { createApp, ref, onMounted, nextTick } = Vue;
+    <div class="float-nav">
+        <div class="nav-btn" :class="{active: view==='home'}" @click="view='home'">
+            <i class="fa-solid fa-shapes"></i>
+        </div>
+        <div class="nav-btn" :class="{active: view==='results'}" @click="view='results'">
+            <i class="fa-solid fa-chart-simple"></i>
+        </div>
+        <div class="nav-btn" :class="{active: view==='settings'}" @click="view='settings'">
+            <i class="fa-solid fa-gear"></i>
+        </div>
+    </div>
 
-        createApp({
-            setup() {
-                const view = ref('lab');
-                const availableGates = ['H', 'X', 'Y', 'Z', 'CX', 'S', 'T', 'M'];
-                const qubits = ref([{}, {}, {}]); // 3 qubits par défaut
-                const logs = ref([]);
-                const loading = ref(false);
-                const settings = ref({ n8nUrl: '', token: '' });
+</div>
 
-                // --- SYSTEME DRAG & DROP (SORTABLE JS) ---
-                const initSortable = () => {
-                    // 1. La boite à outils (Source)
-                    const toolboxEl = document.getElementById('toolbox');
-                    new Sortable(toolboxEl, {
-                        group: { name: 'shared', pull: 'clone', put: false }, // Clone les items
-                        animation: 150,
-                        sort: false // On ne trie pas la toolbox
-                    });
+<script>
+    const { createApp, ref, onMounted, nextTick } = Vue;
 
-                    // 2. Les lignes de qubits (Targets)
-                    qubits.value.forEach((_, index) => {
-                        const targetEl = document.getElementById('qubit-' + index);
-                        if(targetEl) {
-                            new Sortable(targetEl, {
-                                group: 'shared',
-                                animation: 150,
-                                onAdd: function (evt) {
-                                    // Feedback haptique quand on dépose
-                                    if(navigator.vibrate) navigator.vibrate(10);
-                                }
-                            });
-                        }
-                    });
-                };
+    createApp({
+        setup() {
+            const view = ref('home');
+            const gates = ['H', 'X', 'Y', 'Z', 'CX', 'M'];
+            const qubits = ref([0, 1]); // 2 qubits initiaux
+            const settings = ref({ n8nUrl: '', token: '' });
+            const loading = ref(false);
+            const logs = ref([]);
 
-                // Gestion dynamique des Sortables quand on ajoute/supprime des lignes
-                const updateSortables = () => {
-                    nextTick(() => initSortable());
-                };
-
-                onMounted(() => {
-                    // Load settings
-                    const saved = localStorage.getItem('qos_liquid_settings');
-                    if(saved) settings.value = JSON.parse(saved);
-
-                    // Start Logs
-                    addLog("System initialized.");
-                    addLog("Liquid Interface loaded.");
-
-                    // Init Drag and Drop
-                    updateSortables();
+            // CONFIG DRAG & DROP
+            const initDrag = () => {
+                // 1. Source (Toolbox)
+                new Sortable(document.getElementById('toolbox'), {
+                    group: { name: 'q-shared', pull: 'clone', put: false }, // Clone les items
+                    animation: 200,
+                    sort: false,
+                    onStart: () => { if(navigator.vibrate) navigator.vibrate(10); } // Haptic start
                 });
 
-                // --- LOGIC ---
-                const addLog = (msg) => {
-                    const time = new Date().toLocaleTimeString().split(' ')[0];
-                    logs.value.unshift({ time, msg });
-                };
-
-                const addQubit = () => {
-                    qubits.value.push({});
-                    updateSortables();
-                };
-
-                const removeQubit = () => {
-                    if(qubits.value.length > 1) {
-                        qubits.value.pop();
-                        updateSortables();
-                    }
-                };
-
-                const resetApp = () => {
-                    if(confirm("Factory Reset?")) {
-                        localStorage.clear();
-                        location.reload();
-                    }
-                };
-
-                const launchSequence = async () => {
-                    if(!settings.value.n8nUrl) {
-                        alert("Veuillez configurer l'URL N8N dans les paramètres.");
-                        view.value = 'settings';
-                        return;
-                    }
-
-                    view.value = 'monitor';
-                    loading.value = true;
-                    addLog("Compiling Quantum Circuit...");
-
-                    // Scraper le DOM pour voir quelles portes sont où (car Sortable modifie le DOM directement)
-                    const circuitData = [];
-                    qubits.value.forEach((_, i) => {
-                        const el = document.getElementById('qubit-' + i);
-                        const gates = [];
-                        el.querySelectorAll('.gate-draggable').forEach(gateEl => {
-                            gates.push(gateEl.innerText);
+                // 2. Targets (Lignes)
+                qubits.value.forEach((_, i) => {
+                    const el = document.getElementById('line-'+i);
+                    if(el) {
+                        new Sortable(el, {
+                            group: 'q-shared',
+                            animation: 200,
+                            ghostClass: 'sortable-ghost',
+                            dragClass: 'sortable-drag',
+                            onAdd: (evt) => {
+                                // Effet "Jelly" quand on dépose
+                                const item = evt.item;
+                                item.classList.add('jelly-pop');
+                                item.style.background = '#6c5ce7'; // Devient violet
+                                item.style.color = 'white';
+                                if(navigator.vibrate) navigator.vibrate([10, 30, 10]); // Haptic drop
+                                
+                                // Retirer la classe d'anim après le rebond
+                                setTimeout(() => item.classList.remove('jelly-pop'), 500);
+                            }
                         });
-                        circuitData.push(gates);
+                    }
+                });
+            };
+
+            onMounted(() => {
+                const s = localStorage.getItem('qcloud_settings');
+                if(s) settings.value = JSON.parse(s);
+                
+                // Init Drag après le rendu Vue
+                setTimeout(initDrag, 500);
+            });
+
+            const addQubit = () => {
+                qubits.value.push(qubits.value.length);
+                setTimeout(initDrag, 100); // Ré-init les nouveaux éléments
+            };
+
+            const resetCircuit = () => {
+                document.querySelectorAll('.drop-area').forEach(el => el.innerHTML = '');
+                if(navigator.vibrate) navigator.vibrate(50);
+            };
+
+            const saveSettings = () => {
+                localStorage.setItem('qcloud_settings', JSON.stringify(settings.value));
+                alert("Sauvegardé !");
+            };
+
+            const runJob = async () => {
+                if(!settings.value.n8nUrl) {
+                    alert("Configurez N8N d'abord !");
+                    view.value = 'settings';
+                    return;
+                }
+                
+                loading.value = true;
+                
+                // Récupération visuelle des données (Méthode simple)
+                let circuitData = [];
+                qubits.value.forEach((_, i) => {
+                    const line = document.getElementById('line-'+i);
+                    let rowGates = [];
+                    line.querySelectorAll('.gate-3d').forEach(g => rowGates.push(g.innerText));
+                    circuitData.push(rowGates);
+                });
+
+                try {
+                    const res = await fetch(settings.value.n8nUrl, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            token: settings.value.token,
+                            circuit: circuitData
+                        })
                     });
+                    const json = await res.json();
+                    logs.value.unshift({
+                        time: new Date().toLocaleTimeString(),
+                        msg: "Job Completed: " + JSON.stringify(json)
+                    });
+                    view.value = 'results';
+                } catch(e) {
+                    alert("Erreur: " + e.message);
+                } finally {
+                    loading.value = false;
+                }
+            };
 
-                    addLog("Circuit Topology: " + JSON.stringify(circuitData));
+            return { view, gates, qubits, settings, loading, logs, addQubit, resetCircuit, saveSettings, runJob };
+        }
+    }).mount('#app');
+</script>
 
-                    try {
-                        const res = await fetch(settings.value.n8nUrl, {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({
-                                token: settings.value.token,
-                                circuit: circuitData
-                            })
-                        });
-                        const json = await res.json();
-                        addLog("SUCCESS. Result: " + JSON.stringify(json));
-                    } catch(e) {
-                        addLog("ERROR: " + e.message);
-                    } finally {
-                        loading.value = false;
-                    }
-                };
-
-                // Save settings auto
-                const save = () => localStorage.setItem('qos_liquid_settings', JSON.stringify(settings.value));
-
-                return {
-                    view, availableGates, qubits, logs, loading, settings,
-                    addQubit, removeQubit, launchSequence, resetApp, save
-                };
-            }
-        }).mount('#app');
-    </script>
 </body>
 </html>
