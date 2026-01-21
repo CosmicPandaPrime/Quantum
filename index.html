@@ -4,189 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default"> <meta name="theme-color" content="#f0f2f5">
-    <title>Q-Cloud 3D</title>
+    <meta name="theme-color" content="#f4f6f9">
+    <title>Q-Cloud Ultimate</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 
     <style>
-        /* --- CLAYMORPHISM SYSTEM --- */
+        /* --- CLAYMORPHISM PRO --- */
         :root {
-            --bg: #f0f4f8; /* Blanc cassé très doux */
+            --bg: #f4f6f9;
             --surface: #ffffff;
-            --primary: #6c5ce7;
-            --primary-soft: #a29bfe;
-            --accent: #00cec9;
-            --text: #2d3436;
-            --text-light: #b2bec3;
+            --primary: #5e6ad2;
+            --primary-dark: #4b55aa;
+            --text-main: #2c3e50;
+            --text-light: #95a5a6;
             
-            /* L'effet "Fluffy 3D" magique */
-            --shadow-flat: 
-                8px 8px 16px rgba(166, 171, 189, 0.3), 
-                -8px -8px 16px rgba(255, 255, 255, 0.8);
-            
-            --shadow-pressed: 
-                inset 6px 6px 10px rgba(166, 171, 189, 0.2), 
-                inset -6px -6px 10px rgba(255, 255, 255, 0.8);
-            
-            --shadow-float: 
-                0 20px 50px rgba(108, 92, 231, 0.15), 
-                0 10px 20px rgba(108, 92, 231, 0.1);
-            
-            --radius: 24px;
+            /* Ombres douces (Soft UI) */
+            --shadow-card: 
+                10px 10px 20px rgba(174, 174, 192, 0.4), 
+                -10px -10px 20px #ffffff;
+            --shadow-inner: 
+                inset 5px 5px 10px rgba(174, 174, 192, 0.2), 
+                inset -5px -5px 10px #ffffff;
+            --shadow-float:
+                0 15px 35px rgba(94, 106, 210, 0.25);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'Varela Round', sans-serif; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; font-family: 'Nunito', sans-serif; }
 
         body {
-            margin: 0; background-color: var(--bg); color: var(--text);
+            margin: 0; background-color: var(--bg); color: var(--text-main);
             height: 100vh; overflow: hidden;
             display: flex; flex-direction: column;
         }
 
-        /* --- HEADER FLUFFY --- */
+        /* --- HEADER --- */
         header {
-            padding: 20px 30px; display: flex; justify-content: space-between; align-items: center;
-            z-index: 10;
+            height: 70px; padding: 0 20px; display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg); z-index: 50;
         }
-        .logo-area {
-            display: flex; align-items: center; gap: 15px;
+        .header-title { font-size: 20px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        .mode-toggle {
+            background: #e0e5ec; padding: 4px; border-radius: 20px; display: flex;
+            box-shadow: var(--shadow-inner);
         }
-        .logo-box {
-            width: 45px; height: 45px; background: var(--surface);
-            border-radius: 16px; box-shadow: var(--shadow-flat);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 22px; color: var(--primary);
+        .toggle-btn {
+            padding: 6px 15px; border-radius: 16px; font-size: 12px; font-weight: bold; color: var(--text-light);
+            transition: all 0.2s;
         }
-        h1 { font-size: 22px; margin: 0; color: var(--text); }
+        .toggle-btn.active { background: var(--surface); color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 
-        /* --- CONTAINER --- */
-        .main-stage {
-            flex: 1; overflow-y: auto; padding: 10px 25px 120px 25px;
-            scroll-behavior: smooth;
+        /* --- MAIN SCROLL AREA --- */
+        .viewport {
+            flex: 1; overflow-y: auto; padding: 10px 20px 140px 20px; /* 140px padding bottom pour ne rien cacher */
+            -webkit-overflow-scrolling: touch; /* Fluidité iOS */
         }
 
-        /* --- CARDS (CLAY STYLE) --- */
-        .clay-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-flat);
-            padding: 25px; margin-bottom: 25px;
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        /* --- UI CARDS --- */
+        .card {
+            background: var(--surface); border-radius: 24px;
+            box-shadow: var(--shadow-card); padding: 20px; margin-bottom: 25px;
+            position: relative;
         }
-        .clay-card:active { transform: scale(0.98); }
+        .card h3 { margin: 0 0 15px 0; font-size: 16px; color: var(--text-main); display: flex; justify-content: space-between; }
 
-        /* --- GATE ELEMENTS (DRAGGABLE) --- */
-        .toolbox-row {
-            display: flex; gap: 15px; padding: 10px 5px 25px 5px;
-            overflow-x: auto; scrollbar-width: none;
+        /* --- TOOLBOX (SCROLL HORIZONTAL) --- */
+        .toolbox-container {
+            overflow-x: auto; padding: 10px 5px 20px 5px;
+            display: flex; gap: 12px;
+            /* Important pour le tactile : permet de scroller horizontalement */
+            touch-action: pan-x; 
         }
-        
-        .gate-3d {
-            min-width: 60px; height: 60px;
-            background: var(--surface);
-            border-radius: 18px;
-            box-shadow: var(--shadow-flat);
+
+        .gate-item {
+            min-width: 55px; height: 55px;
+            background: var(--surface); border-radius: 16px;
+            box-shadow: var(--shadow-card);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 18px; color: var(--primary);
-            position: relative; cursor: grab;
-            transition: all 0.3s;
+            font-weight: 800; font-size: 14px; color: var(--primary);
+            position: relative;
+            /* CRUCIAL POUR LE DRAG SUR MOBILE : Empêche le navigateur de scroller quand on touche l'élément */
+            touch-action: none; 
+            cursor: grab;
         }
-
-        /* Décoration interne pour effet volume */
-        .gate-3d::after {
-            content:''; position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(240,240,255,0) 100%);
-            pointer-events: none; opacity: 0.5;
+        .gate-desc { font-size: 8px; opacity: 0.6; margin-top: 2px; font-weight: 600; }
+        
+        /* Style quand on déplace */
+        .sortable-ghost { opacity: 0.4; background: #e0e5ec; }
+        .sortable-drag { 
+            transform: scale(1.1); background: var(--primary); color: white; opacity: 1 !important; z-index: 9999; 
+            box-shadow: 0 20px 40px rgba(94, 106, 210, 0.4);
         }
-
-        /* L'état quand on soulève l'élément */
-        .sortable-drag {
-            cursor: grabbing; opacity: 1 !important; background: var(--primary) !important; color: white !important;
-            transform: scale(1.2) rotate(5deg) !important;
-            box-shadow: 0 30px 60px rgba(108, 92, 231, 0.4) !important;
-            z-index: 9999;
-        }
-
-        /* Animation Jelly à l'atterrissage */
-        @keyframes jelly {
-            0% { transform: scale(1, 1); }
-            30% { transform: scale(1.25, 0.75); }
-            40% { transform: scale(0.75, 1.25); }
-            50% { transform: scale(1.15, 0.85); }
-            65% { transform: scale(0.95, 1.05); }
-            75% { transform: scale(1.05, 0.95); }
-            100% { transform: scale(1, 1); }
-        }
-        .jelly-pop { animation: jelly 0.5s; }
 
         /* --- CIRCUIT LINES --- */
-        .circuit-track {
-            display: flex; align-items: center; min-height: 80px;
-            background: #f8faff; border-radius: 20px;
-            box-shadow: inset 4px 4px 8px rgba(166, 171, 189, 0.1), inset -4px -4px 8px rgba(255,255,255,0.8);
-            margin-bottom: 15px; padding: 10px; position: relative;
+        .circuit-line {
+            display: flex; align-items: center; min-height: 70px;
+            background: #eef2f7; border-radius: 18px;
+            margin-bottom: 15px; padding: 5px;
+            box-shadow: var(--shadow-inner);
         }
-        .qubit-label {
-            font-weight: bold; color: var(--text-light); font-size: 14px;
-            width: 40px; text-align: center;
+        .qubit-id { 
+            width: 40px; font-size: 14px; font-weight: bold; color: var(--text-light); text-align: center; 
         }
-        .drop-area {
-            flex: 1; display: flex; align-items: center; gap: 10px;
-            overflow-x: auto; min-height: 60px; padding-right: 20px;
-        }
-
-        /* --- BIG BUTTON --- */
-        .btn-fluffy {
-            width: 100%; padding: 20px; border: none; border-radius: 20px;
-            background: var(--primary); color: white;
-            font-size: 18px; font-weight: bold; letter-spacing: 1px;
-            box-shadow: 0 15px 30px rgba(108, 92, 231, 0.3);
-            transition: all 0.2s; position: relative; overflow: hidden;
-        }
-        .btn-fluffy:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(108, 92, 231, 0.2); }
-        .btn-fluffy::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 50%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.2), transparent);
+        .drop-zone {
+            flex: 1; display: flex; align-items: center; gap: 8px;
+            overflow-x: auto; padding: 5px 15px 5px 5px; min-height: 60px;
         }
 
-        /* --- FLOATING NAV --- */
-        .float-nav {
-            position: fixed; bottom: 40px; left: 20px; right: 20px;
-            height: 80px; background: var(--surface);
+        /* --- CODE EDITOR --- */
+        .code-area {
+            width: 100%; height: 350px; background: #2c3e50; color: #ecf0f1;
+            border-radius: 18px; padding: 15px; border: none; outline: none;
+            font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.5;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+            resize: none;
+        }
+
+        /* --- ACTION BUTTONS --- */
+        .btn-big {
+            width: 100%; padding: 18px; border: none; border-radius: 20px;
+            background: var(--primary); color: white; font-size: 16px; font-weight: 800;
+            box-shadow: var(--shadow-float); transition: transform 0.1s;
+        }
+        .btn-big:active { transform: scale(0.96); }
+
+        .btn-small {
+            padding: 8px 16px; border-radius: 12px; border: none; background: var(--bg);
+            color: var(--text-light); font-weight: bold; box-shadow: var(--shadow-card);
+            margin-right: 10px;
+        }
+        .btn-small:active { box-shadow: var(--shadow-inner); }
+
+        /* --- BOTTOM NAV (FIXED) --- */
+        .navbar {
+            position: fixed; bottom: 30px; left: 20px; right: 20px;
+            height: 75px; background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
             border-radius: 40px; box-shadow: var(--shadow-float);
             display: flex; justify-content: space-around; align-items: center;
-            z-index: 100; padding: 0 10px;
+            z-index: 100;
         }
-        .nav-btn {
-            width: 50px; height: 50px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--text-light); font-size: 20px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        .nav-item {
+            width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: var(--text-light); border-radius: 50%;
+            transition: all 0.3s;
         }
-        .nav-btn.active {
-            background: var(--bg); color: var(--primary);
-            box-shadow: var(--shadow-pressed);
-            transform: translateY(-10px);
+        .nav-item.active {
+            background: var(--primary); color: white; transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(94, 106, 210, 0.4);
         }
 
         /* --- INPUTS --- */
         input {
-            width: 100%; border: none; padding: 15px; border-radius: 15px;
-            background: #f8faff; box-shadow: inset 4px 4px 8px rgba(166, 171, 189, 0.2), inset -4px -4px 8px rgba(255,255,255,0.8);
-            font-size: 16px; color: var(--primary); margin-bottom: 15px; outline: none;
+            width: 100%; padding: 15px; border-radius: 15px; border: none;
+            background: #eef2f7; box-shadow: var(--shadow-inner); margin-bottom: 15px;
+            color: var(--primary); font-weight: bold; outline: none;
         }
-
-        /* --- TRANSITIONS --- */
-        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s, transform 0.3s; }
-        .fade-enter-from { opacity: 0; transform: translateY(20px); }
-        .fade-leave-to { opacity: 0; transform: translateY(-20px); }
-
     </style>
 </head>
 <body>
@@ -194,112 +170,123 @@
 <div id="app">
 
     <header>
-        <div class="logo-area">
-            <div class="logo-box">
-                <i class="fa-solid fa-cloud"></i>
-            </div>
-            <div>
-                <h1>Q-Cloud</h1>
-                <div style="font-size:12px; color:var(--text-light)">Quantum Composer</div>
-            </div>
+        <div class="header-title">
+            <i class="fa-solid fa-cloud-bolt"></i> Q-Cloud
         </div>
-        <div class="logo-box" style="width:40px; height:40px; font-size:16px; color:var(--text-light)">
-            <i class="fa-solid fa-user"></i>
+        <div class="mode-toggle">
+            <div class="toggle-btn" :class="{active: mode==='visual'}" @click="mode='visual'">Visuel</div>
+            <div class="toggle-btn" :class="{active: mode==='code'}" @click="mode='code'">Code</div>
         </div>
     </header>
 
-    <div class="main-stage">
+    <div class="viewport">
+        
         <transition name="fade" mode="out-in">
             
-            <div v-if="view === 'home'" key="home">
+            <div v-if="view === 'editor'" key="editor">
                 
-                <div class="clay-card">
-                    <div style="font-size:12px; text-transform:uppercase; color:var(--text-light); font-weight:bold; margin-bottom:10px;">Portes Logiques</div>
-                    <div class="toolbox-row" id="toolbox">
-                        <div v-for="g in gates" :key="g" class="gate-3d" :data-id="g">
-                            {{ g }}
+                <div v-show="mode === 'visual'">
+                    <div class="card">
+                        <h3>
+                            Bibliothèque de Portes
+                            <span style="font-size:10px; opacity:0.5; font-weight:normal">Glisser vers le bas</span>
+                        </h3>
+                        <div class="toolbox-container" id="toolbox">
+                            <div class="gate-item" data-id="H">H<span class="gate-desc">Had</span></div>
+                            <div class="gate-item" data-id="X">X<span class="gate-desc">Not</span></div>
+                            <div class="gate-item" data-id="Y">Y<span class="gate-desc">Pauli</span></div>
+                            <div class="gate-item" data-id="Z">Z<span class="gate-desc">Phase</span></div>
+                            <div class="gate-item" data-id="S">S<span class="gate-desc">Ph/2</span></div>
+                            <div class="gate-item" data-id="T">T<span class="gate-desc">Ph/4</span></div>
+                            <div class="gate-item" data-id="CX" style="color:#d35400">CX<span class="gate-desc">CNOT</span></div>
+                            <div class="gate-item" data-id="CZ" style="color:#d35400">CZ<span class="gate-desc">CPhase</span></div>
+                            <div class="gate-item" data-id="SWAP" style="color:#8e44ad">SW<span class="gate-desc">Swap</span></div>
+                            <div class="gate-item" data-id="CCX" style="color:#8e44ad">CCX<span class="gate-desc">Toffoli</span></div>
+                            <div class="gate-item" data-id="M" style="background:#2c3e50; color:white">M<span class="gate-desc">Mesure</span></div>
+                            <div class="gate-item" data-id="RST" style="color:#c0392b">RST<span class="gate-desc">Reset</span></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>
+                            Circuit Principal
+                            <div>
+                                <button class="btn-small" @click="addQubit">+</button>
+                                <button class="btn-small" style="color:#e74c3c" @click="resetLines">Clr</button>
+                            </div>
+                        </h3>
+                        
+                        <div v-for="(q, idx) in qubits" :key="idx" class="circuit-line">
+                            <div class="qubit-id">q{{idx}}</div>
+                            <div class="drop-zone" :id="'line-'+idx"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="clay-card">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <span style="font-weight:bold; color:var(--text)">Circuit Principal</span>
-                        <span style="font-size:12px; color:var(--accent)">IBM_OSAKA • READY</span>
-                    </div>
+                <div v-show="mode === 'code'">
+                    <div class="card">
+                        <h3>Éditeur Python / QASM</h3>
+                        <textarea v-model="codeContent" class="code-area" placeholder="# Collez votre code Qiskit ou OpenQASM ici...
+from qiskit import QuantumCircuit
 
-                    <div v-for="(line, idx) in qubits" :key="idx" class="circuit-track">
-                        <div class="qubit-label">q{{idx}}</div>
-                        <div class="drop-area" :id="'line-'+idx">
-                            </div>
-                    </div>
-
-                    <div style="display:flex; gap:15px; margin-top:10px;">
-                        <button @click="addQubit" style="flex:1; padding:12px; border-radius:15px; border:none; background:var(--bg); color:var(--text-light); font-weight:bold; box-shadow:var(--shadow-flat);">+ Ligne</button>
-                        <button @click="resetCircuit" style="flex:1; padding:12px; border-radius:15px; border:none; background:var(--bg); color:var(--text-light); font-weight:bold; box-shadow:var(--shadow-flat); color:#ff7675">Reset</button>
+qc = QuantumCircuit(2)
+qc.h(0)
+qc.cx(0, 1)
+qc.measure_all()"></textarea>
+                        <div style="margin-top:15px; font-size:12px; color:#95a5a6">
+                            Ce code sera envoyé tel quel au serveur via n8n.
+                        </div>
                     </div>
                 </div>
 
-                <button class="btn-fluffy" @click="runJob">
-                    <span v-if="!loading">LANCER LE CALCUL</span>
-                    <span v-else><i class="fa-solid fa-spinner fa-spin"></i> TRAITEMENT...</span>
-                </button>
+                <div style="padding-bottom: 20px;">
+                    <button class="btn-big" @click="executeJob">
+                        <i v-if="loading" class="fa-solid fa-spinner fa-spin"></i>
+                        <span v-else>EXECUTER SUR IBM QUANTUM</span>
+                    </button>
+                </div>
 
             </div>
 
             <div v-if="view === 'settings'" key="settings">
-                <div class="clay-card">
-                    <h2 style="margin-bottom:20px; color:var(--primary)">Connexion API</h2>
+                <div class="card">
+                    <h3>Connexion N8N (Bridge)</h3>
+                    <div style="font-size:12px; margin-bottom:10px; color:#95a5a6">URL du Webhook</div>
+                    <input v-model="settings.url" placeholder="https://..." type="url">
                     
-                    <label style="font-size:12px; font-weight:bold; color:var(--text-light); margin-left:10px;">N8N Webhook URL</label>
-                    <input v-model="settings.n8nUrl" placeholder="https://..." type="url">
-                    
-                    <label style="font-size:12px; font-weight:bold; color:var(--text-light); margin-left:10px;">IBM Quantum Token</label>
+                    <div style="font-size:12px; margin-bottom:10px; color:#95a5a6">Token IBM Quantum</div>
                     <input v-model="settings.token" placeholder="api_token..." type="password">
                     
-                    <button class="btn-fluffy" style="margin-top:10px" @click="saveSettings">SAUVEGARDER</button>
-                </div>
-
-                <div class="clay-card">
-                    <h2 style="margin-bottom:20px; color:var(--primary)">Paramètres</h2>
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0; border-bottom:1px solid #eee;">
-                        <span>Haptique</span>
-                        <div style="width:40px; height:20px; background:var(--primary); border-radius:10px; position:relative;"><div style="width:16px; height:16px; background:white; border-radius:50%; position:absolute; right:2px; top:2px;"></div></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; padding:15px 0;">
-                        <span>Mode Sombre</span>
-                        <div style="width:40px; height:20px; background:#dfe6e9; border-radius:10px; position:relative;"><div style="width:16px; height:16px; background:white; border-radius:50%; position:absolute; left:2px; top:2px; box-shadow:0 2px 5px rgba(0,0,0,0.2);"></div></div>
-                    </div>
+                    <button class="btn-big" style="background:#2c3e50" @click="saveSettings">SAUVEGARDER CONFIG</button>
                 </div>
             </div>
 
-            <div v-if="view === 'results'" key="results">
-                <div class="clay-card">
-                    <h2 style="color:var(--primary)">Résultats</h2>
-                    <div v-if="logs.length === 0" style="text-align:center; padding:30px; color:var(--text-light)">
-                        Aucun résultat récent.
+            <div v-if="view === 'logs'" key="logs">
+                <div class="card">
+                    <h3>Journal d'Exécution</h3>
+                    <div v-if="logs.length === 0" style="text-align:center; padding:20px; color:#bdc3c7">
+                        Aucun log disponible.
                     </div>
-                    <div v-else>
-                        <div v-for="(l, i) in logs" :key="i" style="background:var(--bg); padding:15px; border-radius:15px; margin-bottom:10px; font-family:monospace; font-size:12px;">
-                            <div style="color:var(--accent); font-weight:bold; margin-bottom:5px;">{{ l.time }}</div>
-                            {{ l.msg }}
-                        </div>
+                    <div v-for="(log, i) in logs" :key="i" style="background:#f8f9fa; padding:10px; border-radius:10px; margin-bottom:10px; border-left:4px solid var(--primary); font-family:monospace; font-size:11px; word-break: break-all;">
+                        <div style="font-weight:bold; color:#7f8c8d; margin-bottom:4px">{{ log.date }}</div>
+                        {{ log.msg }}
                     </div>
                 </div>
             </div>
 
         </transition>
+
     </div>
 
-    <div class="float-nav">
-        <div class="nav-btn" :class="{active: view==='home'}" @click="view='home'">
-            <i class="fa-solid fa-shapes"></i>
+    <div class="navbar">
+        <div class="nav-item" :class="{active: view==='editor'}" @click="view='editor'">
+            <i class="fa-solid fa-layer-group"></i>
         </div>
-        <div class="nav-btn" :class="{active: view==='results'}" @click="view='results'">
-            <i class="fa-solid fa-chart-simple"></i>
+        <div class="nav-item" :class="{active: view==='logs'}" @click="view='logs'">
+            <i class="fa-solid fa-terminal"></i>
         </div>
-        <div class="nav-btn" :class="{active: view==='settings'}" @click="view='settings'">
-            <i class="fa-solid fa-gear"></i>
+        <div class="nav-item" :class="{active: view==='settings'}" @click="view='settings'">
+            <i class="fa-solid fa-gears"></i>
         </div>
     </div>
 
@@ -310,115 +297,123 @@
 
     createApp({
         setup() {
-            const view = ref('home');
-            const gates = ['H', 'X', 'Y', 'Z', 'CX', 'M'];
-            const qubits = ref([0, 1]); // 2 qubits initiaux
-            const settings = ref({ n8nUrl: '', token: '' });
-            const loading = ref(false);
+            const view = ref('editor');
+            const mode = ref('visual'); // 'visual' ou 'code'
+            const qubits = ref([0, 1, 2]); // 3 qubits par défaut
+            const settings = ref({ url: '', token: '' });
             const logs = ref([]);
+            const loading = ref(false);
+            const codeContent = ref('');
 
-            // CONFIG DRAG & DROP
-            const initDrag = () => {
-                // 1. Source (Toolbox)
-                new Sortable(document.getElementById('toolbox'), {
-                    group: { name: 'q-shared', pull: 'clone', put: false }, // Clone les items
-                    animation: 200,
+            // --- DRAG & DROP ENGINE (Optimisé Mobile) ---
+            const initSortable = () => {
+                const toolbox = document.getElementById('toolbox');
+                if(!toolbox) return;
+
+                // Source (Toolbox)
+                new Sortable(toolbox, {
+                    group: { name: 'q', pull: 'clone', put: false },
                     sort: false,
-                    onStart: () => { if(navigator.vibrate) navigator.vibrate(10); } // Haptic start
+                    animation: 150,
+                    delay: 0, // Instantané
+                    touchStartThreshold: 5 // Tolérance tactile
                 });
 
-                // 2. Targets (Lignes)
+                // Targets (Lignes)
                 qubits.value.forEach((_, i) => {
                     const el = document.getElementById('line-'+i);
                     if(el) {
                         new Sortable(el, {
-                            group: 'q-shared',
-                            animation: 200,
+                            group: 'q',
+                            animation: 150,
+                            delay: 0,
                             ghostClass: 'sortable-ghost',
                             dragClass: 'sortable-drag',
-                            onAdd: (evt) => {
-                                // Effet "Jelly" quand on dépose
-                                const item = evt.item;
-                                item.classList.add('jelly-pop');
-                                item.style.background = '#6c5ce7'; // Devient violet
-                                item.style.color = 'white';
-                                if(navigator.vibrate) navigator.vibrate([10, 30, 10]); // Haptic drop
-                                
-                                // Retirer la classe d'anim après le rebond
-                                setTimeout(() => item.classList.remove('jelly-pop'), 500);
-                            }
+                            fallbackOnBody: true, // IMPORTANT pour mobile: empêche le clipping
+                            swapThreshold: 0.65
                         });
                     }
                 });
             };
 
             onMounted(() => {
-                const s = localStorage.getItem('qcloud_settings');
+                const s = localStorage.getItem('qcloud_pro_settings');
                 if(s) settings.value = JSON.parse(s);
-                
-                // Init Drag après le rendu Vue
-                setTimeout(initDrag, 500);
+                // Petit délai pour laisser le DOM se construire
+                setTimeout(initSortable, 500);
             });
 
+            // Gestion des qubits
             const addQubit = () => {
                 qubits.value.push(qubits.value.length);
-                setTimeout(initDrag, 100); // Ré-init les nouveaux éléments
+                setTimeout(initSortable, 100);
             };
-
-            const resetCircuit = () => {
-                document.querySelectorAll('.drop-area').forEach(el => el.innerHTML = '');
-                if(navigator.vibrate) navigator.vibrate(50);
+            
+            const resetLines = () => {
+                document.querySelectorAll('.drop-zone').forEach(el => el.innerHTML = '');
             };
 
             const saveSettings = () => {
-                localStorage.setItem('qcloud_settings', JSON.stringify(settings.value));
-                alert("Sauvegardé !");
+                localStorage.setItem('qcloud_pro_settings', JSON.stringify(settings.value));
+                alert("Sauvegarde effectuée.");
             };
 
-            const runJob = async () => {
-                if(!settings.value.n8nUrl) {
-                    alert("Configurez N8N d'abord !");
+            // EXECUTION
+            const executeJob = async () => {
+                if(!settings.value.url) {
+                    alert("Configurez l'URL Webhook N8N dans les réglages.");
                     view.value = 'settings';
                     return;
                 }
-                
+
                 loading.value = true;
-                
-                // Récupération visuelle des données (Méthode simple)
-                let circuitData = [];
-                qubits.value.forEach((_, i) => {
-                    const line = document.getElementById('line-'+i);
-                    let rowGates = [];
-                    line.querySelectorAll('.gate-3d').forEach(g => rowGates.push(g.innerText));
-                    circuitData.push(rowGates);
-                });
+                let payloadData = null;
+
+                if(mode.value === 'code') {
+                    // Envoi du code texte brut
+                    payloadData = codeContent.value;
+                } else {
+                    // Envoi de la grille visuelle (Scraping du DOM car Sortable modifie le DOM)
+                    let grid = [];
+                    qubits.value.forEach((_, i) => {
+                        const line = document.getElementById('line-'+i);
+                        let row = [];
+                        line.querySelectorAll('.gate-item').forEach(g => row.push(g.getAttribute('data-id')));
+                        grid.push(row);
+                    });
+                    payloadData = grid;
+                }
 
                 try {
-                    const res = await fetch(settings.value.n8nUrl, {
+                    const res = await fetch(settings.value.url, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
                             token: settings.value.token,
-                            circuit: circuitData
+                            mode: mode.value,
+                            data: payloadData
                         })
                     });
                     const json = await res.json();
+                    
                     logs.value.unshift({
-                        time: new Date().toLocaleTimeString(),
-                        msg: "Job Completed: " + JSON.stringify(json)
+                        date: new Date().toLocaleTimeString(),
+                        msg: "SUCCESS: " + JSON.stringify(json)
                     });
-                    view.value = 'results';
+                    view.value = 'logs'; // Redirection vers les logs
                 } catch(e) {
-                    alert("Erreur: " + e.message);
+                    alert("Erreur réseau: " + e.message);
                 } finally {
                     loading.value = false;
                 }
             };
 
-            return { view, gates, qubits, settings, loading, logs, addQubit, resetCircuit, saveSettings, runJob };
+            return { 
+                view, mode, qubits, settings, logs, loading, codeContent,
+                addQubit, resetLines, saveSettings, executeJob 
+            };
         }
     }).mount('#app');
 </script>
-
 </body>
 </html>
